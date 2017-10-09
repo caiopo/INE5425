@@ -1,0 +1,2 @@
+class EntityQueueFull(RuntimeError):
+    pass
