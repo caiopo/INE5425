@@ -16,6 +16,10 @@ class PriorityQueue:
         self.history.append(item)
         return item
 
+    @property
+    def first(self):
+        return self.heap[0]
+
     def __len__(self):
         return len(self.heap)
 

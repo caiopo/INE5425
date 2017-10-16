@@ -1,4 +1,5 @@
 from collections import deque
+from time import sleep
 
 from . import events, exceptions
 from .entity import Entity
@@ -88,6 +89,10 @@ class Simulation:
         event = self.state.events.dequeue()
 
         event.run()
+
+        delay = self.state.events.first.time - event.time
+        if delay > 0:
+            sleep(delay / 10)
 
         return self.state
 
