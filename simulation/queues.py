@@ -1,6 +1,6 @@
 from heapq import heappop, heappush
-import events
-import exceptions
+
+from . import events, exceptions
 
 
 class PriorityQueue:
@@ -12,15 +12,15 @@ class PriorityQueue:
         heappush(self.heap, item)
 
     def dequeue(self):
-        event = heappop(self.heap)
-        self.history.append(event)
-        return event
+        item = heappop(self.heap)
+        self.history.append(item)
+        return item
 
     def __len__(self):
         return len(self.heap)
 
     def __iter__(self):
-        return iter(self.heap)
+        return iter(sorted(self.heap))
 
 
 class EntityQueue:

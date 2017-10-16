@@ -4,11 +4,25 @@ from functools import total_ordering
 
 @total_ordering
 class Event:
-    def __init__(self, time):
+    def __init__(self, state, time):
         self.time = time
+        self.state = state
 
-    def run(self, state):
+    def run(self):
+        print(type(self).__name__)
+
+        self._run()
+
+        next_event = self._next_event()
+
+        if next_event is not None:
+            self.state.enqueue(next_event)
+
+    def _run(self):
         raise NotImplementedError()
+
+    def _next_event(self):
+        return None
 
     def __lt__(self, other):
         return self.time < other.time
@@ -18,44 +32,65 @@ class Event:
 
 
 class StartSimulation(Event):
-    def run(self, state):
-        state.new_event(FinishSimulation(state.total_time))
+    def _run(self):
+        pass
+
+    def _next_event(self):
+        return FinishSimulation(self.state, self.state.total_time)
 
 
 class FinishSimulation(Event):
-    def run(self, state):
-        print('FinishSimulation#run')
+    def _run(self):
+        self.state.finished = True
 
 
 class ServerEvent(Event):
-    def __init__(self, time, server):
-        super().__init__(time)
+    def __init__(self, state, time, server):
+        super().__init__(state, time)
 
         self.server = server
 
 
 class NewEntity(ServerEvent):
-    def run(self, state):
-        new_time = self.time + state.tec()
+    def _run(self):
+        self.server.enqueue(Entity(self.state, self.time, self.server))
 
-        entity = Entity(self.time, self.server)
+        self.state.statistics.total_entities += 1
+
+    def _next_event(self):
+        return NewEntity(
+            self.state, self.time + self.server.tec(), self.server)
 
 
 class ServerFail(ServerEvent):
-    def run(self, state):
+    def _run(self):
         pass
+
+    def _next_event(self):
+        return ServerFixed(
+            self.state, self.time + self.state.tf(), self.server)
 
 
 class ServerFixed(ServerEvent):
-    def run(self, state):
+    def _run(self):
         pass
+
+    def _next_event(self):
+        return ServerFail(
+            self.state, self.time + self.state.tef(), self.server)
 
 
 class StartComputing(ServerEvent):
-    def run(self, state):
-        pass
+    def _run(self):
+        entity = self.server.dequeue()
+
+        self.server.compute()
+
+    def _next_event(self):
+        return FinishComputing(
+            self.state, self.time + self.server.ts(), self.server)
 
 
 class FinishComputing(ServerEvent):
-    def run(self, state):
+    def _run(self):
         pass
