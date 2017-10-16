@@ -1,67 +1,73 @@
-from collections import deque
 import exceptions
+from collections import deque
+
 import events
+from queues import EntityQueue, PriorityQueue
 
 
-class EventQueue:
-    def __init__(self, entity_limit=None):
-        self.entity_limit = entity_limit
-        self.queue = deque()
-        self._history = []
+class Server:
+    def __init__(self, number, state):
+        self.number = number
+        self.working = True
 
-    def __len__(self):
-        return len(self.queue)
-
-    def enqueue(self, event):
-        if (isinstance(event, events.NewEntity) and
-                self._count_entities() == self.entity_limit):
-            raise exceptions.EntityQueueFull()
-
-        self.queue.append(event)
-
-    def dequeue(self):
-        event = self.queue.popleft()
-        self._history.append(event)
-        return event
-
-    def _count_entities(self):
-        return len([event for event in self.queue
-                    if isinstance(event, events.NewEntity)])
+    def process(self, entity, state):
+        pass
 
 
 class Statistics:
     def __init__(self):
         self.fails = 0
         self.fixes = 0
-        self.entities = 0
+        self.total_entities = 0
+        self.entities_blocked = 0
 
 
 class State:
-    def __init__(self, time_limit):
-        self.time_limit = time_limit
+    # ugly
+    def __init__(self, *, entity_limit=None, total_time,
+                 tec1, tec2, ts1, ts2, tef, tf):
+        self.total_time = total_time
 
-        self.queue = EventQueue()
+        self.events = PriorityQueue()
+        self.entities = EntityQueue(entity_limit)
 
-        self.queue.enqueue(events.FinishSimulation(time_limit))
+        self.tec = (tec1, tec2)
+        self.ts = (ts1, ts2)
+        self.tef = tef
+        self.tf = tf
 
-        self.tec1 = None
-        self.tec2 = None
-        self.ts1 = None
-        self.ts2 = None
-        self.tef = None
-        self.tf = None
+        self.servers = (
+            Server(0, self),
+            Server(1, self),
+        )
+
+    @property
+    def new_event(self):
+        return self.queue.enqueue
 
 
 class Simulation:
     def __init__(self, state):
         self.state = state
+        self.started = False
+        self.finished = False
 
-    def run(self):
-        while len(self.state.queue) > 0:
-            event = self.state.queue.dequeue()
+    def step(self):
+        if not self.started:
+            self.started = True
 
-            event.run(self.state)
+        if not len(self.state.events):
+            self.finished = True
+            return self.state
 
+        event = self.state.events.dequeue()
 
-if __name__ == '__main__':
-    Simulation(State(10)).run()
+        event.run(self.state)
+
+        return self.state
+
+    def run_until_complete(self):
+        while not self.finished:
+            self.step()
+
+        return self.state
