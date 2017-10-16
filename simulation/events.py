@@ -9,7 +9,7 @@ class Event:
         self.state = state
 
     def run(self):
-        print(type(self).__name__)
+        print(type(self).__name__, self.time)
 
         self._run()
 
@@ -33,7 +33,15 @@ class Event:
 
 class StartSimulation(Event):
     def _run(self):
-        pass
+        servers = self.state.servers
+
+        events = [
+            ServerFail(self.state, self.state.tef(), server)
+            for server in servers
+        ]
+
+        for event in events:
+            self.state.enqueue(event)
 
     def _next_event(self):
         return FinishSimulation(self.state, self.state.total_time)

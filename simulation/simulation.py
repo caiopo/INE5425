@@ -51,6 +51,8 @@ class State:
 
         self.events = PriorityQueue()
         self.entities = EntityQueue(entity_limit)
+        self.started = False
+        self.finished = False
 
         self.enqueue(events.StartSimulation(self, 0))
 
@@ -72,17 +74,15 @@ class State:
 class Simulation:
     def __init__(self, state):
         self.state = state
-        self.started = False
-        self.finished = False
 
     def step(self):
-        if not self.started:
-            self.started = True
+        if not self.state.started:
+            self.state.started = True
 
         if not len(self.state.events):
-            self.finished = True
+            self.state.finished = True
 
-        if self.finished:
+        if self.state.finished:
             return self.state
 
         event = self.state.events.dequeue()
@@ -92,7 +92,7 @@ class Simulation:
         return self.state
 
     def run_until_complete(self):
-        while not self.finished:
+        while not self.state.finished:
             self.step()
 
         return self.state
