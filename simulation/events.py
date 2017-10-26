@@ -72,7 +72,7 @@ class NewEntity(ServerEvent):
 
 class ServerFail(ServerEvent):
     def _run(self):
-        pass
+        self.state.statistics.fails += 1
 
     def _next_event(self):
         return ServerFixed(
@@ -81,7 +81,7 @@ class ServerFail(ServerEvent):
 
 class ServerFixed(ServerEvent):
     def _run(self):
-        pass
+        self.state.statistics.fixes += 1
 
     def _next_event(self):
         return ServerFail(

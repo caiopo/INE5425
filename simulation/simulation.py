@@ -43,6 +43,11 @@ class Statistics:
         self.total_entities = 0
         self.entities_blocked = 0
 
+    def __str__(self):
+        values = ', '.join(f'{k}={v}' for k, v in self.__dict__.items())
+
+        return f'Statistics({values})'
+
 
 class State:
     # ugly
@@ -64,6 +69,8 @@ class State:
             Server(0, self, tec1, ts1),
             Server(1, self, tec2, ts2),
         )
+
+        self.statistics = Statistics()
 
     def enqueue(self, event):
         self.events.enqueue(event)
