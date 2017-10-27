@@ -1,6 +1,8 @@
 import toga
 from colosseum import CSS
 
+import strs
+
 
 class BaseGui(toga.App):
     def startup(self):
@@ -13,23 +15,30 @@ class BaseGui(toga.App):
             'tf': None,
         }
 
-        buttons = [
+        self.inputs = {
+            key: toga.TextInput()
+            for key in self.distributions.keys()
+        }
+
+        children = [
             toga.Box(
                 children=[
-                    toga.Label(key),
-                    toga.TextInput(),
+                    toga.Label(strs.TIMES_NAMES[key]),
+                    self.inputs[key],
                 ],
-                style=CSS(width=200, margin=20),
+                style=CSS(width=200, margin_bottom=10),
             )
 
             for key in self.distributions.keys()
         ]
 
         left_box = toga.Box(
-            children=[
-                toga.Box(children=buttons)
-            ],
-            style=CSS(width=200, margin=20)
+            children=(children +
+                      [toga.Button(
+                          'Confirmar',
+                          on_press=self.save_params,
+                          style=CSS(width=200, margin=20))]),
+            style=CSS(width=200, margin=20),
         )
 
         right_box = toga.Box()
@@ -37,11 +46,15 @@ class BaseGui(toga.App):
         split = toga.SplitContainer()
         split.content = [left_box, right_box]
 
-        self.main_window = toga.MainWindow(self.name)
+        self.main_window = toga.Window(self.name)
         self.main_window.app = self
         self.main_window.content = split
         self.main_window.show()
 
+    def save_params(self, button):
+        params = {k: ti.value for k, ti in self.inputs.items()}
+
+        
 
 if __name__ == '__main__':
     BaseGui('Simulação', 'br.ufsc.ine.modsim').main_loop()
