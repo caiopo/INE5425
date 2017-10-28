@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>879</width>
-    <height>749</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1035,14 +1035,22 @@
           <item>
            <widget class="QLabel" name="label_17">
             <property name="text">
-             <string>Tempo atual</string>
+             <string>Tempo atual:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLCDNumber" name="lcd">
-            <property name="intValue" stdset="0">
-             <number>10</number>
+           <widget class="QLabel" name="time">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
             </property>
            </widget>
           </item>
@@ -1065,7 +1073,7 @@
           <item>
            <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>Eventos por passo:</string>
+             <string>Unidades de tempo por passo:</string>
             </property>
            </widget>
           </item>
@@ -1104,6 +1112,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="stop">
+           <property name="text">
+            <string>Cancelar Simulação</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="complete">
            <property name="text">
             <string>Executar até o final</string>
@@ -1113,7 +1128,7 @@
          <item>
           <widget class="QPushButton" name="step">
            <property name="text">
-            <string>Executar 00 passo(s)</string>
+            <string>Avançar 01 unidades de tempo</string>
            </property>
           </widget>
          </item>

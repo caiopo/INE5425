@@ -16,6 +16,10 @@ class Server:
         self.failed = None
         self.fails = []
 
+    @property
+    def other(self):
+        return self.state.servers[not self.n]
+
     def enqueue(self, entity):
         if not isinstance(entity, Entity):
             raise TypeError()

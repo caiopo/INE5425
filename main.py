@@ -33,6 +33,7 @@ class Main:
         self.ui.start.clicked.connect(self.button_start)
         self.ui.step.clicked.connect(self.button_step)
         self.ui.complete.clicked.connect(self.button_complete)
+        self.ui.stop.clicked.connect(self.button_cancel)
 
         sys.exit(self.app.exec_())
 
@@ -54,7 +55,7 @@ class Main:
             self.ui.fix_count_2.setText("--")
 
             self.ui.progress_bar.setValue(0)
-            self.ui.lcd.setProperty("intValue", 0)
+            set_text(self.ui.time, 0)
 
         else:
             stats = self.simulation.state.statistics
@@ -82,11 +83,9 @@ class Main:
                 if state.total_time is None or state.total_time == 0:
                     self.ui.progress_bar.setValue(50)
                 else:
-                    print('cur', state.current_time)
-                    print(100 * state.current_time / state.total_time)
                     self.ui.progress_bar.setValue(int(100 * state.current_time / state.total_time))
 
-            self.ui.lcd.setProperty("intValue", int(state.current_time))
+            set_text(self.ui.time, int(state.current_time))
 
         self.ui.error.setText("")
 
@@ -141,7 +140,7 @@ class Main:
 
     def handle_slider(self):
         steps = self.ui.nsteps.value()
-        self.ui.step.setText('Executar {} passo(s)'.format(str(steps).zfill(2)))
+        self.ui.step.setText('Avançar {} unidades de tempo'.format(str(steps).zfill(2)))
 
     def button_start(self):
         params = self.get_params()
@@ -174,9 +173,18 @@ class Main:
             self.update_labels(state)
 
     def button_complete(self):
-        state = self.simulation.run_until_complete()
+        state = self.simulation.step()
+
+        while not state.finished:
+            for _ in range(100):
+                state = self.simulation.step()
+            self.update_labels(state)
 
         self.finish(state)
+
+    def button_cancel(self):
+        self.finish(None)
+        self.simulation = None
 
     def get_params(self):
         dist_widgets = {

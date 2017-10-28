@@ -4,7 +4,7 @@ from itertools import chain
 from .entity import Entity
 from .exceptions import EntityQueueFull
 
-INTERVAL = 0.1
+INTERVAL = 0.001
 
 
 @total_ordering
@@ -77,7 +77,12 @@ class NewEntity(ServerEvent):
         try:
             self.server.enqueue(Entity(self.time, self.server))
         except EntityQueueFull:
-            self.state.statistics.entities_blocked += 1
+            try:
+                self.server.other.enqueue(Entity(self.time, self.server))
+            except EntityQueueFull:
+                self.state.statistics.entities_blocked += 1
+            else:
+                self.state.statistics.entities_entered += 1
         else:
             self.state.statistics.entities_entered += 1
 
@@ -95,8 +100,10 @@ class ServerFail(ServerEvent):
                 self.state, self.time + self.state.tf(), self.server)
 
         else:
+            next_time = self.state.peek().time
+
             return ServerFail(
-                self.state, self.time + INTERVAL, self.server)
+                self.state, next_time + INTERVAL, self.server)
 
 
 class ServerFixed(ServerEvent):
@@ -108,27 +115,16 @@ class ServerFixed(ServerEvent):
             self.state, self.time + self.state.tef(), self.server)
 
 
-# class ServerFixed(ServerEvent):
-#     def _run(self):
-#         if self.server.fix():
-#             self.next = ServerFail(
-#                 self.state, self.time + self.state.tef(), self.server)
-#         else:
-#             self.next = ServerFixed(
-#                 self.state, self.time + INTERVAL, self.server)
-#
-#     def _next_event(self):
-#         return self.next
-
-
 class StartComputing(ServerEvent):
     def _run(self):
         if self.server.start_computing():
             self.next = FinishComputing(
                 self.state, self.time + self.server.ts(), self.server)
         else:
+            next_time = self.state.peek().time
+
             self.next = StartComputing(
-                self.state, self.time + INTERVAL, self.server)
+                self.state, next_time + INTERVAL, self.server)
 
     def _next_event(self):
         return self.next
@@ -142,7 +138,7 @@ class FinishComputing(ServerEvent):
     def _next_event(self):
         next_time = self.state.peek().time
 
-        return StartComputing(self.state, next_time, self.server)
+        return StartComputing(self.state, next_time + INTERVAL, self.server)
 
 
 EVENT_PRECEDENCE = [
