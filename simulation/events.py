@@ -3,10 +3,14 @@ from functools import total_ordering
 from .entity import Entity
 from .exceptions import EntityQueueFull
 
+INTERVAL = 0.1
+
 
 @total_ordering
 class Event:
     def __init__(self, state, time):
+        assert isinstance(time, (float, int))
+
         self.time = time
         self.state = state
 
@@ -48,13 +52,14 @@ class StartSimulation(Event):
         ]
 
         entity_events = [
-            NewEntity(self.state, self.state.tec(), server)
+            NewEntity(self.state, server.tec(), server)
             for server in self.state.servers
         ]
 
-        events = [FinishSimulation(self.state, self.state.total_time)]
+        if self.state.total_time is not None:
+            return entity_events + fail_events + [FinishSimulation(self.state, self.state.total_time)]
 
-        return events + entity_events + fail_events
+        return entity_events + fail_events
 
 
 class FinishSimulation(Event):
@@ -86,8 +91,13 @@ class NewEntity(ServerEvent):
 
 class ServerFail(ServerEvent):
     def _run(self):
-        self.state.statistics.fails += 1
-        self.server.fail()
+        if self.server.fail():
+            self.next = ServerFixed(
+                self.state, self.time + self.server.ts(), self.server)
+
+        else:
+            self.next = ServerFail(
+                self.state, self.time + INTERVAL, self.server)
 
     def _next_event(self):
         return ServerFixed(
@@ -96,7 +106,6 @@ class ServerFail(ServerEvent):
 
 class ServerFixed(ServerEvent):
     def _run(self):
-        self.state.statistics.fixes += 1
         self.server.fix()
 
     def _next_event(self):
@@ -106,12 +115,12 @@ class ServerFixed(ServerEvent):
 
 class StartComputing(ServerEvent):
     def _run(self):
-        if not self.server.start_computing():
-            self.next = StartComputing(
-                self.state, self.time + 1, self.server)
-        else:
+        if self.server.start_computing():
             self.next = FinishComputing(
                 self.state, self.time + self.server.ts(), self.server)
+        else:
+            self.next = StartComputing(
+                self.state, self.time + INTERVAL, self.server)
 
     def _next_event(self):
         return self.next

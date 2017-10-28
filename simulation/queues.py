@@ -1,6 +1,6 @@
 from heapq import heappop, heappush
 
-from . import events, exceptions
+from . import exceptions
 
 
 class PriorityQueue:
@@ -34,14 +34,13 @@ class EntityQueue:
 
     def enqueue(self, entity):
         if (self.entity_limit is not None and
-                len(self.queue) >= self.entity_limit):
+                    len(self.queue) >= self.entity_limit):
             raise exceptions.EntityQueueFull()
 
         self.queue.enqueue(entity)
 
-    @property
     def dequeue(self):
-        return self.queue.dequeue
+        return self.queue.dequeue()
 
     @property
     def __len__(self):

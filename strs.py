@@ -17,6 +17,14 @@ TIMES_NAMES = {
     TF: 'Tempo de falha',
 }
 
+DISTRIBUTIONS_BY_INDEX = (
+    'constant',
+    'exponential',
+    'normal',
+    'triangular',
+    'uniform',
+)
+
 DISTRIBUTIONS_NAMES = {
     'constant': 'Constante',
     'exponential': 'Exponencial',

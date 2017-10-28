@@ -36,6 +36,8 @@ class Server:
         self.current = self.dequeue()
         self.current.start_time = self.state.current_time
 
+        return True
+
     def finish_computing(self):
         self.current.end_time = self.state.current_time
         self.current = None
@@ -45,6 +47,8 @@ class Server:
             return False
 
         self.failed = self.state.current_time
+
+        return True
 
     def fix(self):
         self.fails.append((self.failed, self.state.current_time))
@@ -62,8 +66,6 @@ class Server:
 
 class Statistics:
     def __init__(self):
-        self.fails = 0
-        self.fixes = 0
         self.entities_entered = 0
         self.entities_left = 0
         self.entities_blocked = 0
@@ -76,7 +78,8 @@ class Statistics:
 
 class State:
     # ugly
-    def __init__(self, *, entity_limit=None, total_time,
+    def __init__(self, *,
+                 entity_limit, total_time,
                  tec1, tec2, ts1, ts2, tef, tf):
         self.total_time = total_time
 
@@ -126,7 +129,7 @@ class Simulation:
         if self.state.finished:
             return self.state
 
-        event = self.state.events.dequeue()
+        event = self.state.dequeue()
 
         event.run()
 
