@@ -12,9 +12,6 @@ def parse_params(string):
 
     dist = strs.DISTRIBUTIONS_FUNCS[groups[0]]
 
-    params = groups[1:]
+    params = [int(s.strip()) for s in groups[1].split(',')]
 
-    [int(s.strip()) for s in params.split(',')]
-
-
-parse_params('')
+    return dist(*params)

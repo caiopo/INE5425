@@ -1,14 +1,14 @@
 from functools import total_ordering
 
 
+@total_ordering
 class Entity:
-    number = 0
-
     def __init__(self, time, server):
-        self.time = time
+        self.enqueue_time = time
         self.server = server
         self.number = Entity.number
-        Entity.number += 1
+        self.start_time = None
+        self.end_time = None
 
     def __lt__(self, other):
         return self.time < other.time

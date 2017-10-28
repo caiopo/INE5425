@@ -1,7 +1,4 @@
-from collections import deque
-from time import sleep
-
-from . import events, exceptions
+from . import events
 from .entity import Entity
 from .queues import EntityQueue, PriorityQueue
 
@@ -13,40 +10,68 @@ class Server:
         self.tec = tec
         self.ts = ts
 
-        self.busy = False
         self.entities = EntityQueue()
         self.current = None
+
+        self.failed = None
+        self.fails = []
 
     @property
     def other(self):
         return self.state.servers[not self.n]
 
     def enqueue(self, entity):
+        if not isinstance(entity, Entity):
+            raise TypeError()
+
         self.entities.enqueue(entity)
 
     def dequeue(self):
         return self.entities.dequeue()
 
     def start_computing(self):
-        self.busy = True
+        if self.failed is not None:
+            return False
+
         self.current = self.dequeue()
+        self.current.start_time = self.state.current_time
 
     def finish_computing(self):
-        self.busy = False
+        self.current.end_time = self.state.current_time
         self.current = None
+
+    def fail(self):
+        if self.current is not None:
+            return False
+
+        self.failed = self.state.current_time
+
+    def fix(self):
+        self.fails.append((self.failed, self.state.current_time))
+        self.failed = None
+
+    @property
+    def history(self):
+        h = self.entities.queue.history
+
+        if len(h) > 1:
+            return h[:-1]
+
+        return h
 
 
 class Statistics:
     def __init__(self):
         self.fails = 0
         self.fixes = 0
-        self.total_entities = 0
+        self.entities_entered = 0
+        self.entities_left = 0
         self.entities_blocked = 0
 
     def __str__(self):
-        values = ', '.join(f'{k}={v}' for k, v in self.__dict__.items())
+        values = ', '.join('{}={}'.format(*it) for it in self.__dict__.items())
 
-        return f'Statistics({values})'
+        return 'Statistics({})'.format(values)
 
 
 class State:
@@ -59,6 +84,7 @@ class State:
         self.entities = EntityQueue(entity_limit)
         self.started = False
         self.finished = False
+        self.current_time = 0
 
         self.enqueue(events.StartSimulation(self, 0))
 
@@ -73,10 +99,17 @@ class State:
         self.statistics = Statistics()
 
     def enqueue(self, event):
+        if not isinstance(event, events.Event):
+            raise TypeError()
+
         self.events.enqueue(event)
 
     def dequeue(self):
-        return self.events.dequeue()
+        event = self.events.dequeue()
+
+        self.current_time = event.time
+
+        return event
 
 
 class Simulation:
@@ -96,10 +129,6 @@ class Simulation:
         event = self.state.events.dequeue()
 
         event.run()
-
-        delay = self.state.events.first.time - event.time
-        if delay > 0:
-            sleep(delay / 10)
 
         return self.state
 
