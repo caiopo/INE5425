@@ -82,24 +82,21 @@ class NewEntity(ServerEvent):
             self.state.statistics.entities_entered += 1
 
     def _next_event(self):
-        return NewEntity(
-            self.state, self.time + self.server.tec(), self.server,
-        )
+        return NewEntity(self.state, self.time + self.server.tec(), self.server)
 
 
 class ServerFail(ServerEvent):
     def _run(self):
-        if self.server.fail():
-            self.next = ServerFixed(
-                self.state, self.time + self.server.ts(), self.server)
-
-        else:
-            self.next = ServerFail(
-                self.state, self.time + INTERVAL, self.server)
+        pass
 
     def _next_event(self):
-        return ServerFixed(
-            self.state, self.time + self.state.tf(), self.server)
+        if self.server.fail():
+            return ServerFixed(
+                self.state, self.time + self.state.tf(), self.server)
+
+        else:
+            return ServerFail(
+                self.state, self.time + INTERVAL, self.server)
 
 
 class ServerFixed(ServerEvent):
@@ -109,6 +106,19 @@ class ServerFixed(ServerEvent):
     def _next_event(self):
         return ServerFail(
             self.state, self.time + self.state.tef(), self.server)
+
+
+# class ServerFixed(ServerEvent):
+#     def _run(self):
+#         if self.server.fix():
+#             self.next = ServerFail(
+#                 self.state, self.time + self.state.tef(), self.server)
+#         else:
+#             self.next = ServerFixed(
+#                 self.state, self.time + INTERVAL, self.server)
+#
+#     def _next_event(self):
+#         return self.next
 
 
 class StartComputing(ServerEvent):
@@ -126,10 +136,13 @@ class StartComputing(ServerEvent):
 
 class FinishComputing(ServerEvent):
     def _run(self):
-        self.state.statistics.entities_entered += 1
+        self.state.statistics.entities_left += 1
+        self.server.finish_computing()
 
     def _next_event(self):
-        return StartComputing(self.state, self.time, self.server)
+        next_time = self.state.peek().time
+
+        return StartComputing(self.state, next_time, self.server)
 
 
 EVENT_PRECEDENCE = [

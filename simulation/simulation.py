@@ -16,10 +16,6 @@ class Server:
         self.failed = None
         self.fails = []
 
-    # @property
-    # def other(self):
-    #     return self.state.servers[not self.n]
-
     def enqueue(self, entity):
         if not isinstance(entity, Entity):
             raise TypeError()
@@ -40,14 +36,23 @@ class Server:
         self.current = None
 
     def fail(self):
+        print('fail called')
         if self.current is not None:
             return False
+
+        print('falhei')
 
         self.failed = self.state.current_time
 
         return True
 
     def fix(self):
+        if self.failed is None:
+            print('failed is none', self.n, self.current)
+            return
+
+        print('consertei')
+
         self.fails.append((self.failed, self.state.current_time))
         self.failed = None
 
@@ -106,12 +111,15 @@ class State:
 
         return event
 
+    def peek(self):
+        return self.events.first
+
 
 class Simulation:
     def __init__(self, state):
         self.state = state
 
-    def step(self):
+    def _step(self):
         if not self.state.started:
             self.state.started = True
 
@@ -124,6 +132,17 @@ class Simulation:
         event = self.state.dequeue()
 
         event.run()
+
+        return self.state
+
+    def step(self):
+        time_before = self.state.current_time
+
+        while not self.state.finished:
+            self._step()
+
+            if (self.state.current_time - time_before) > 1:
+                break
 
         return self.state
 
