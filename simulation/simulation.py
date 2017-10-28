@@ -16,9 +16,9 @@ class Server:
         self.failed = None
         self.fails = []
 
-    @property
-    def other(self):
-        return self.state.servers[not self.n]
+    # @property
+    # def other(self):
+    #     return self.state.servers[not self.n]
 
     def enqueue(self, entity):
         if not isinstance(entity, Entity):
@@ -26,14 +26,11 @@ class Server:
 
         self.entities.enqueue(entity)
 
-    def dequeue(self):
-        return self.entities.dequeue()
-
     def start_computing(self):
-        if self.failed is not None:
+        if self.failed is not None or len(self.entities) < 1:
             return False
 
-        self.current = self.dequeue()
+        self.current = self.entities.dequeue()
         self.current.start_time = self.state.current_time
 
         return True
@@ -56,12 +53,7 @@ class Server:
 
     @property
     def history(self):
-        h = self.entities.queue.history
-
-        if len(h) > 1:
-            return h[:-1]
-
-        return h
+        yield from (e for e in self.entities.queue.history if e.end_time is not None)
 
 
 class Statistics:

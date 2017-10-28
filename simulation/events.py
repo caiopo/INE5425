@@ -1,4 +1,5 @@
 from functools import total_ordering
+from itertools import chain
 
 from .entity import Entity
 from .exceptions import EntityQueueFull
@@ -46,20 +47,17 @@ class StartSimulation(Event):
         pass
 
     def _next_event(self):
-        fail_events = [
-            ServerFail(self.state, self.state.tef(), server)
+        server_events = list(chain.from_iterable([
+            (ServerFail(self.state, self.state.tef(), server),
+             NewEntity(self.state, server.tec(), server),
+             StartComputing(self.state, 0, server))
             for server in self.state.servers
-        ]
-
-        entity_events = [
-            NewEntity(self.state, server.tec(), server)
-            for server in self.state.servers
-        ]
+        ]))
 
         if self.state.total_time is not None:
-            return entity_events + fail_events + [FinishSimulation(self.state, self.state.total_time)]
+            return server_events + [FinishSimulation(self.state, self.state.total_time)]
 
-        return entity_events + fail_events
+        return server_events
 
 
 class FinishSimulation(Event):
