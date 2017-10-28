@@ -43,4 +43,9 @@ def mean_time_in_queue(servers):
 
 
 def mean_entities_in_queue(server):
-    ...
+    if server.state.current_time == 0:
+        return None
+
+    time = sum((e.start_time - e.enqueue_time) for e in server.history)
+
+    return time / server.state.current_time

@@ -62,12 +62,12 @@ class Main:
             svrs = self.simulation.state.servers
             sv1, sv2 = svrs
 
-            set_text(self.ui.mean_entity_in_queue_1, None)
-            set_text(self.ui.mean_entity_in_queue_2, None)
+            set_text(self.ui.mean_entity_in_queue_1, reports.mean_entities_in_queue(sv1))
+            set_text(self.ui.mean_entity_in_queue_2, reports.mean_entities_in_queue(sv2))
             set_text(self.ui.occupation_rate_1, reports.occupation_rate(sv1))
             set_text(self.ui.occupation_rate_2, reports.occupation_rate(sv2))
-            set_text(self.ui.mean_time_in_queue, reports.mean_time_in_queue(svrs))
             set_text(self.ui.mean_time_in_system, reports.mean_time_in_system(svrs))
+            set_text(self.ui.mean_time_in_queue, reports.mean_time_in_queue(svrs))
             set_text(self.ui.entities_entered, stats.entities_entered)
             set_text(self.ui.entities_left, stats.entities_left)
             set_text(self.ui.entities_inside, stats.entities_entered - stats.entities_left)
@@ -91,7 +91,7 @@ class Main:
 
     def start(self, state):
         widgets_to_enable = (
-            self.ui.complete, self.ui.step,
+            self.ui.complete, self.ui.step, self.ui.stop,
         )
 
         widgets_to_disable = (
@@ -123,11 +123,11 @@ class Main:
             self.ui.tef_cb, self.ui.tef_text,
             self.ui.tf_cb, self.ui.tf_text,
             self.ui.entity_limit, self.ui.total_time,
-            self.ui.start, self.ui.complete
+            self.ui.start, self.ui.complete,
         )
 
         widgets_to_disable = (
-            self.ui.complete, self.ui.step,
+            self.ui.complete, self.ui.step, self.ui.stop,
         )
 
         for widget in widgets_to_enable:

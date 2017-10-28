@@ -2,7 +2,7 @@ import re
 
 import strs
 
-REGEX = re.compile(r'([0-9.]*)')
+REGEX = re.compile(r'([0-9.]+)')
 
 ALLOWED_CHARS = set('0123456789. ')
 
@@ -11,7 +11,7 @@ def parse_params(dist_name, text):
     if not set(text).issubset(ALLOWED_CHARS):
         raise ValueError()
 
-    groups = REGEX.match(text).groups()
+    groups = REGEX.findall(text)
 
     print(groups)
 

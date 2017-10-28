@@ -1,22 +1,27 @@
 import random
-from functools import partial
 
 
 def normal(mean, sd):
-    return partial(random.normalvariate, mean, sd)
+    return lambda: abs(random.normalvariate(mean, sd))
 
 
 def uniform(a, b):
-    return partial(random.uniform, a, b)
+    assert a < b
+
+    return lambda: abs(random.uniform(a, b))
 
 
 def triangular(low, mode, high):
-    return partial(random.triangular, low, high, mode)
+    assert low <= mode <= high
+
+    return lambda: abs(random.triangular(low, high, mode))
 
 
 def exponential(mean):
-    return partial(random.expovariate, mean)
+    assert mean != 0
+
+    return lambda: abs(random.expovariate(mean))
 
 
 def constant(value):
-    return lambda: value
+    return lambda: abs(value)
