@@ -1,3 +1,4 @@
+from simulation import exceptions
 from . import events
 from .entity import Entity
 from .queues import EntityQueue, PriorityQueue
@@ -23,6 +24,9 @@ class Server:
     def enqueue(self, entity):
         if not isinstance(entity, Entity):
             raise TypeError()
+
+        if self.state.full:
+            raise exceptions.EntityQueueFull()
 
         self.entities.enqueue(entity)
 
@@ -85,7 +89,8 @@ class State:
         self.total_time = total_time
 
         self.events = PriorityQueue()
-        self.entities = EntityQueue(entity_limit)
+        self.entities = EntityQueue()
+        self.entity_limit = entity_limit
         self.started = False
         self.finished = False
         self.current_time = 0
@@ -101,6 +106,10 @@ class State:
         )
 
         self.statistics = Statistics()
+
+    @property
+    def full(self):
+        return (self.statistics.entities_entered - self.statistics.entities_left) >= self.entity_limit
 
     def enqueue(self, event):
         if not isinstance(event, events.Event):
